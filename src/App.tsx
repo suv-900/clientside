@@ -3,8 +3,13 @@ import LoginUser from './Loginuser'
 import CreateUser from './CreateUser'
 import React from 'react'
 import {BrowserRouter,Routes,Route} from 'react-router-dom'
+import CreatePost from './Createpost'
+import {NotFound,Unauthorised} from './ErrCode/ErrorCodes'
+//TODO server polling
+
 function App() {
   const[serverOK,setserverOK]=useState(false)
+//  const[pollCount,setPollCount]=useState(0)  
   
   async function checkServer(){
     try{
@@ -24,8 +29,10 @@ function App() {
       checkServer()
     }
    ,[])
+    
    
-  
+   
+ 
   return (
     <div>
       {serverOK?<h2>Welcome aboard!</h2>
@@ -35,6 +42,9 @@ function App() {
       <Routes>
         <Route path="/login" element={<LoginUser/>} />
         <Route path="/register" element={<CreateUser/>} />
+        <Route path="/createpost" element={<CreatePost/>} />
+        <Route path="/401" element={<Unauthorised/>} />
+        <Route path="/404" element={<NotFound/>} />
       </Routes>
      </BrowserRouter> 
     </div>

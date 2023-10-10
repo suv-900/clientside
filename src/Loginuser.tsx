@@ -1,35 +1,49 @@
 import {useState} from 'react'
 import React from 'react'
 import './styles.css'
+//TODO catch no entry empty values
 export default function LoginUser(){
     const[username,setUsername]=useState("")
     const[password,setPassword]=useState("")
     const[errorMessage,setErrorMessage]=useState("")
+    const[loading,setLoading]=useState(false)
    
     async function  userLogin(){
+            if(username===""){
+                setErrorMessage("Invalid input")
+                return
+            }
+            if(password===""){
+                setErrorMessage("Invalid input")
+                return
+            }
+            setErrorMessage("")
+            setLoading(true)
             const user={username,password}
-            await fetch("http://localhost:8000/login",{
+            fetch("http://localhost:8000/login",{
                 method:"POST",
                 body:JSON.stringify(user)
-            })
-            .then(res=>{
-                try{        
+            }).then(res=>{
                     if (res.status===404){
-                        setErrorMessage("Invalid Username.")       
+                        setLoading(false)
+                        setErrorMessage("Invalid Username.")  
+                        return  
                     }
                     if (res.status===401){
+                        setLoading(false)
                         setErrorMessage("Invalid Password")
+                        return
                     }
                     if (res.status===200){
+                        setLoading(false)
                         res.json().then(res=>{
-                            console.log(res.token)
-                            localStorage.setItem("userToken",res.token)
+                            localStorage.setItem("token",res)
+                            return
                         })
+                        
+                        //console.log(document.cookie.split(";").find(cookie=>cookie.trim().startsWith("userToken")))
+                        //console.log(document.cookie)
                     }
-                }
-                catch(err){
-                    console.log(err)
-                }
             })
                 
     }
@@ -60,10 +74,10 @@ export default function LoginUser(){
 
                 <label>Password</label>
                 <input type="text" onChange={e=>setPassword(e.target.value)} className="input-field"/>
-                {errorMessage===""?<></>
-                                  :<>{errorMessage}</>}
+                {errorMessage===""?<></>:<div>{errorMessage}</div>}
+                {loading?<div>Loading</div>:<></>}
             </form>
-            <button onSubmit={userLogin} className="button">Login</button>
+            <button onClick={()=>{userLogin()}} className="button">Login</button>
         </div>
 
     )

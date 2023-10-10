@@ -1,5 +1,5 @@
 import React from 'react'
-import {useState} from 'react'
+import {useState,useEffect} from 'react'
 import './styles.css'
 //TODO check all functions again
 //TODO add new features test your functions
@@ -17,40 +17,55 @@ export default function CreateUser(){
     const[invalidUsername,setinvalidUsername]=useState(false) 
     const[loading,setLoading]=useState(false)
     const[usernameLoading,setUsernameLoading]=useState(false) 
-    
-
+    const[usernameavailable,setUsernameavailable]=useState(false) 
+    const[userCreated,setUserCreated]=useState(false)
+    //done :)
     async function checkUsername(e: React.ChangeEvent<HTMLInputElement>){
-        console.log("checkUsername called")
         const username=e.target.value
-        console.log("len "+username.length)
         if(username.length===0){
-            setUsername("")
             setUserexists(false)
+            setUsernameavailable(false)
             setinvalidUsername(true)
             setisValidUsername(false)
+            setUsername("")
         }else{
         setinvalidUsername(false)
+        setUsernameavailable(false)
         setUsernameLoading(true)
-        await fetch("http://localhost:8000/checkusername",{
+        
+        setTimeout(()=>{
+            fetch("http://localhost:8000/checkusername",{
             method:"POST",
             body:JSON.stringify(username)
             
-        }).then(res=>{
+            }).then(res=>{
             if (res.status===409){
-                setUserexists(true)
                 setUsernameLoading(false)
+                setUserexists(true)
+                setUsernameavailable(false)
                 setisValidUsername(false)
             }else{
              setUsernameLoading(false)
              setUserexists(false)
-             setUsername(e.target.value!)
              setisValidUsername(true)
+             setUsernameavailable(true)
+             setUsername(e.target.value!)
             }
         }).catch(err=>{console.log(err)})
+        },500)
         }
         
     }
+   
+    useEffect(()=>{
+            enableButton()
+    },[isValidUsername,isValidEmail,isValidPassword])
     
+
+    function putUsername(e:React.ChangeEvent<HTMLInputElement>){
+        setUsername(e.target.value!)
+    }
+
     function checkPass(e: React.ChangeEvent<HTMLInputElement>){
         const len=e.target.value.length
         if(len===0){
@@ -70,7 +85,6 @@ export default function CreateUser(){
             setPassOK(false)
             setisValidPassword(false)
         }
-        enableButton()
     }
     
     function checkEmail(e: React.ChangeEvent<HTMLInputElement>){
@@ -88,54 +102,57 @@ export default function CreateUser(){
             setisValidEmail(true)
         }else{
             setValidEmail(false)
-            setisValidEmail(true)
+            setisValidEmail(false)
         }
-        setTimeout(()=>{enableButton()},1000)
         
     }
     
     
     //React.ButtonHTMLAttributes<HTMLButtonElement>
     async function createUser(){
-        console.log("create user")
         setLoading(true)
         if(username===""){
-            console.log(username)
             setinvalidUsername(true)
             setisValidUsername(false)
+            return
         }
         if(email===""){
-            console.log(email)
             setisValidEmail(false)
             setValidEmail(false)
+            return
         }
         if(password===""){
-            console.log("password "+password)
             setisValidPassword(false)
             setPassOK(false)
+            return
         }
-        console.log(username+" "+email+" "+password)
-        return
         const user=JSON.stringify({username,email,password})
-        console.log(user)
         await fetch("http://localhost:8000/register",{
             method:"POST",
             body:user
         }).then(res=>{
-            if (res.status!==200){
+            setLoading(false)
+            if (res.status===200){
+                setUserCreated(true)
                 console.log("res "+res)
-            }
+            }else{
+
             res.json().then(res=>{
-                console.log("token res"+res)
+                console.log(res)
                 //localStorage.setItem("userToken",res.token)
             }) 
+            }
         })
     }
-
+    useEffect(()=>{
+        sendToHomePage()
+    },[userCreated])
+    
+    function sendToHomePage(){
+        console.log("User created.")
+    }
+    
     function enableButton(){
-        console.log("enable button callled.")
-        console.log(isValidUsername+" "+isValidEmail+" "+isValidPassword)
-        
         if(isValidEmail&&isValidUsername&&isValidPassword){
             setdisableSubmit(false)
         }else{
@@ -154,24 +171,25 @@ export default function CreateUser(){
     return(
         <div>
             <form className="form-container">
-                <label>Username</label>
+                <label className="label">Username</label>
                 <input type="text" onChange={e=>checkUsername(e)} className="input-field"/>
-                {userexists?<div>username exists! try another username</div>:<></>} 
-                {usernameLoading&&<h3>Loading...</h3>}
-                {invalidUsername&&<div>Invalid Username</div>}
+                {userexists?<div className="input-error-message">username exists! try another username</div>:<></>} 
+                {usernameLoading&&<h3 className="input-error-message" >Loading...</h3>}
+                {invalidUsername&&<div className="input-error-message" >Invalid Username</div>}
+                {usernameavailable?<div className="input-error-message" >username available</div>:<></>}
 
-                <label>Email</label>
+                <label className="label">Email</label>
                 <input type="text" onChange={e=>checkEmail(e)} className="input-field" />
                 {validEmail?<></>:<div className="input-error-message">Invalid Email</div>}
                 
-                <label>Password</label>
+                <label className="label">Password</label>
                 <input type="text" onChange={e=>checkPass(e)} className="input-field" />
                 {passOK?<></>:<div className="input-error-message">Invalid Password (pasword should be less than 10 char and should contain atleast a digit or a special char "0-9 @#$&").</div>}
             </form>
             <button disabled={disableSubmit}  onClick={()=>{
                 createUser() 
                 }} >create</button>
-            {loading&&<h3>Loading...</h3>}
+            {loading&&<h3 className="input-error-message"  >Loading...</h3>}
         </div>
     )
 }
