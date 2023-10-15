@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import './styles.css'
 import { useNavigate} from 'react-router-dom'
 import {CheckCookie} from './Utils'
-import { ViewPostAfterCreating } from './Viewpost'
+import { ViewPostByID } from './Viewpost'
 //Cookies.set('name', 'value', { expires: 7, path: '' })
 
 //checks token sends post 
@@ -86,7 +86,7 @@ export default function CreatePost(){
         {error?<div className="input-error-message">{errorMessage}</div>:<></>}
         {loading&&<div className="input-error-message">Loading</div>}
 
-        {postCreated?<ViewPostAfterCreating title={title} body={postbody} />:<>Error</>}
+        {postCreated?<ViewPostByID />:<>Error</>}
         </div>
     )
 }
