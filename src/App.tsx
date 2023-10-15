@@ -5,6 +5,7 @@ import React from 'react'
 import {BrowserRouter,Routes,Route} from 'react-router-dom'
 import CreatePost from './Createpost'
 import {NotFound,Unauthorised} from './ErrCode/ErrorCodes'
+import { Home } from './Home'
 //TODO server polling
 
 function App() {
@@ -43,6 +44,7 @@ function App() {
         <Route path="/login" element={<LoginUser/>} />
         <Route path="/register" element={<CreateUser/>} />
         <Route path="/createpost" element={<CreatePost/>} />
+        <Route path="/home" element={<Home/>} />
         <Route path="/401" element={<Unauthorised/>} />
         <Route path="/404" element={<NotFound/>} />
       </Routes>

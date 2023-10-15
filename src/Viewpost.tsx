@@ -1,7 +1,7 @@
 import React from 'react'
 import {useState,useEffect} from 'react'
 
-export function ViewPost(postid:number){
+export function ViewPostByID(){
     const[loading,setLoading]=useState(false)
     const[error,setError]=useState("")
 
@@ -40,4 +40,19 @@ export function ViewPost(postid:number){
 
         </div>
     )
+}
+
+export function ViewPostAfterCreating(props: { title: string; body: string}){
+
+
+    const title=props.title
+    const postbody=props.body
+
+
+    return(
+        <div>
+            
+        </div>
+    )
+    
 }

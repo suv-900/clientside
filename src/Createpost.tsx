@@ -1,81 +1,77 @@
-import {useJwt} from 'react-jwt'
 import React, { useEffect, useState } from 'react'
 import './styles.css'
-import Cookie from 'js-cookie'
-import { redirect} from 'react-router-dom'
-
+import { useNavigate} from 'react-router-dom'
+import {CheckCookie} from './Utils'
+import { ViewPostAfterCreating } from './Viewpost'
 //Cookies.set('name', 'value', { expires: 7, path: '' })
+
+//checks token sends post 
 
 export default function CreatePost(){
     const[cookie,setCookie]=useState("")
     const[title,setTitle]=useState("")
     const[postbody,setpostBody]=useState("")
-    const[category,setCategory]=useState("")
     const[errorMessage,setErrorMessage]=useState("")
-    const[error,setError]=useState("")
+    const[error,setError]=useState(false)
     const[loading,setLoading]=useState(false)    
+    const[render,setRender]=useState(false)
+    const[enableButton,setenableButton]=useState(true)
+    const[buttonRenderCount,setbuttonRenderCount]=useState(0)
+    const[postCreated,setPostCreated]=useState(false)
+    const navigate=useNavigate()
     
-    let userid:number;
-    function checkCookie(){
-        const cookie:string|null=localStorage.getItem("token")
-        if(cookie==null){
-            return redirect("/401")
-        }
-        //const{decodedToken,isExpired}=useJWT(cookie)    
-        /*if(isExpired){
-            return redirect("/login")
-        }
-        const userid=decodedToken.value*/
-        //localStorage.setItem("userToken",res.token)
-        console.log("token found")
-        setCookie(cookie)
-    }
-
     useEffect(()=>{
-        checkCookie()
+        const cookieFound=CheckCookie()
+        if(cookieFound.length===0){
+            navigate("/401") 
+            return
+        }
+        setRender(true)
+        setCookie(cookieFound)
     },[])
 
     async function createPost(){
-        if(title===""){
+        if(title.length==0||postbody.length==0){
+            setError(true)
             setErrorMessage("Invalid input")
             return
-        }
-        if(postbody===""){
-            setErrorMessage("Invalid input")
-            return
-        }
+        } 
         setLoading(true)
         const headers ={
-            'Authorization':`Bearer${cookie}`,
+            'Authorization':`${cookie}`,
+
             'Content-Type':'application/json'
         }
-        const post={"post_title":title,"post_content":postbody,"post_category":category}
-        const res=await fetch("http://localhost/createpost",{
+        const post={"post_title":title,"post_content":postbody}
+        const res=await fetch("http://localhost:8000/createpost",{
             method:'POST',
             headers:headers,
             body:JSON.stringify(post)
         })
+        setLoading(false)
         if(res.status===200){
-            setLoading(false)
-            setError("")
+            //send to view post 
+            setPostCreated(true)
+            setError(false)
+        }else{
+            setError(true)
+            setErrorMessage("error occured "+res)
         } 
     }
 
-    function getcategorydropdown(e: React.ChangeEvent<HTMLSelectElement>){
-        setCategory(e.target.value)
+    if(title.length>5&&postbody.length>5&&buttonRenderCount===0){
+        setenableButton(false)
+        setbuttonRenderCount(1)
     }
+
+    /*function getcategorydropdown(e: React.ChangeEvent<HTMLSelectElement>){
+        setCategory(e.target.value)
+    }*/
 
     return(
         <div>
-        <form>
+        {render?
             <div className="form-group">
-                <label className="category">Category:</label>
-                <select id="category" name="category" onChange={e=>{getcategorydropdown(e)}}>
-                    <option value="programming">Programming</option>
-                    <option value="technology">Technology</option>
-                    <option value="other">Other</option>
-                </select>
-            </div>
             <div className="form-group">
                 <label className="label">Title:</label>
                 <input type="text"  placeholder="Enter title" className="post-input" onChange={e=>setTitle(e.target.value)}/>
@@ -84,10 +80,13 @@ export default function CreatePost(){
                 <label className="body">Body:</label>
                 <input placeholder="Enter post content" className="post-input" onChange={e=>setpostBody(e.target.value)} />
             </div>
-            <button type="submit">Submit</button>
-        </form>
+            <button disabled={enableButton}  type="submit" onClick={()=>createPost()}>Submit</button>
+            </div>
+        :<></>}
+        {error?<div className="input-error-message">{errorMessage}</div>:<></>}
+        {loading&&<div className="input-error-message">Loading</div>}
+
+        {postCreated?<ViewPostAfterCreating title={title} body={postbody} />:<>Error</>}
         </div>
     )
 }
-
-

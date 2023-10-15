@@ -1,6 +1,8 @@
 import React from 'react'
 import {useState,useEffect} from 'react'
 import './styles.css'
+import {useNavigate} from 'react-router-dom'
+
 //TODO check all functions again
 //TODO add new features test your functions
 export default function CreateUser(){
@@ -19,7 +21,10 @@ export default function CreateUser(){
     const[usernameLoading,setUsernameLoading]=useState(false) 
     const[usernameavailable,setUsernameavailable]=useState(false) 
     const[userCreated,setUserCreated]=useState(false)
+    const[enableButtonCount,setenableButtonCount]=useState(0)
+    const navigate=useNavigate()
     //done :)
+    var timer: string | number | NodeJS.Timeout | undefined 
     async function checkUsername(e: React.ChangeEvent<HTMLInputElement>){
         const username=e.target.value
         if(username.length===0){
@@ -30,10 +35,11 @@ export default function CreateUser(){
             setUsername("")
         }else{
         setinvalidUsername(false)
-        setUsernameavailable(false)
         setUsernameLoading(true)
-        
-        setTimeout(()=>{
+        setUsernameavailable(false)
+        setUserexists(false)
+        clearTimeout(timer)
+        timer=setTimeout(()=>{
             fetch("http://localhost:8000/checkusername",{
             method:"POST",
             body:JSON.stringify(username)
@@ -52,15 +58,16 @@ export default function CreateUser(){
              setUsername(e.target.value!)
             }
         }).catch(err=>{console.log(err)})
-        },500)
+        },800)
         }
-        
     }
    
-    useEffect(()=>{
-            enableButton()
-    },[isValidUsername,isValidEmail,isValidPassword])
-    
+    //buttonCount to stop inf renders
+    if(isValidUsername&&isValidEmail&&isValidPassword&&enableButtonCount==0){
+        console.log("sex")
+        setenableButtonCount(1)
+        setdisableSubmit(false)
+    }
 
     function putUsername(e:React.ChangeEvent<HTMLInputElement>){
         setUsername(e.target.value!)
@@ -144,13 +151,13 @@ export default function CreateUser(){
             }
         })
     }
-    useEffect(()=>{
-        sendToHomePage()
-    },[userCreated])
     
-    function sendToHomePage(){
-        console.log("User created.")
+    if(userCreated){
+        console.log("sending to homepage")
+        navigate("/home")
+        return
     }
+    
     
     function enableButton(){
         if(isValidEmail&&isValidUsername&&isValidPassword){
@@ -176,7 +183,7 @@ export default function CreateUser(){
                 {userexists?<div className="input-error-message">username exists! try another username</div>:<></>} 
                 {usernameLoading&&<h3 className="input-error-message" >Loading...</h3>}
                 {invalidUsername&&<div className="input-error-message" >Invalid Username</div>}
-                {usernameavailable?<div className="input-error-message" >username available</div>:<></>}
+                {!invalidUsername&&usernameavailable?<div className="input-error-message" >username available</div>:<></>}
 
                 <label className="label">Email</label>
                 <input type="text" onChange={e=>checkEmail(e)} className="input-field" />
