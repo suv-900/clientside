@@ -1,6 +1,5 @@
 import React from 'react'
 import {useState,useEffect} from 'react'
-import './styles.css'
 import {useNavigate} from 'react-router-dom'
 
 //TODO check all functions again
@@ -76,11 +75,11 @@ export default function CreateUser(){
     function checkPass(e: React.ChangeEvent<HTMLInputElement>){
         const len=e.target.value.length
         if(len===0){
-            setPassOK(true)
+            setPassOK(false)
             setisValidPassword(false)
             return
         }
-        const checkLen=(len>=5&&len<=10)?true:false
+        const checkLen=(len>=5&&len<=20)?true:false
         const checkDigits=/\d/.test(e.target.value)
         const checkSpecialChar=/[@#$&]/.test(e.target.value)
 
@@ -186,11 +185,11 @@ export default function CreateUser(){
                 {!invalidUsername&&usernameavailable?<div className="input-error-message" >username available</div>:<></>}
 
                 <label className="label">Email</label>
-                <input type="text" onChange={e=>checkEmail(e)} className="input-field" />
+                <input type="email" onChange={e=>checkEmail(e)} className="input-field" />
                 {validEmail?<></>:<div className="input-error-message">Invalid Email</div>}
                 
                 <label className="label">Password</label>
-                <input type="text" onChange={e=>checkPass(e)} className="input-field" />
+                <input type="password" onChange={e=>checkPass(e)} className="input-field" />
                 {passOK?<></>:<div className="input-error-message">Invalid Password (pasword should be less than 10 char and should contain atleast a digit or a special char "0-9 @#$&").</div>}
             </form>
             <button disabled={disableSubmit}  onClick={()=>{

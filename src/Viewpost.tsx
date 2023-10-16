@@ -11,9 +11,21 @@ export function ViewPostByID(){
     const[cookieFound,setCookieFound]=useState(false)
     const[token,setToken]=useState("")
     const[commentInput,setCommentInput]=useState("")
+    const[renderUserPostedComment,setRenderUserPostedComment]=useState(false)
+    
+    let postID:number|undefined
     //TODO fetch postid from the url
+    let {id}=useParams()
+        if(id!==undefined){
+            postID=parseInt(id)
+        }else{
+            console.log("Postid undefined.")
+            return
+        }
+    
+        /*
     useEffect(()=>{
-        const cookie=CheckCookie()
+       const cookie=CheckCookie()
         if(cookie.length!=0){
             setCookieFound(true)
             setToken(cookie)
@@ -21,15 +33,13 @@ export function ViewPostByID(){
         }
         getPostContents()
     },[])
-
-    const postid=useParams() 
+    */
     let post:PostObject
-
+    
     async function getPostContents(){
         setLoading(true)
-        await fetch("http://localhost:8000/viewpost",{
+        await fetch(`http://localhost:8000/viewpost/${postID}`,{
             method:"GET",
-            body:JSON.stringify(postid)
         }).then(res=>{
             if (res.status===200){
                 return res.json()
@@ -56,29 +66,44 @@ export function ViewPostByID(){
         console.log(token) 
         setLoading(true) 
         const headers={
-
+            "Authorization":`${token}`
+            //add new headers
         }        
-        const res=await fetch("http://localhost:8000/comment",{
+        const res=await fetch("http://localhost:8000/commentOnPost",{
             method:"POST",
             headers:headers,
-            body:JSON.stringify(post)
+            body:JSON.stringify(token)
         })
         setLoading(false)
         if(res.status===200){
+            setRenderUserPostedComment(true)
            //add the new comment on top of all comments 
         }else{
+            setRenderUserPostedComment(false)
             setErrorMessage("Server Error")
         }
     }
-
+    const userLink:string=`http://localhost:3000/user/${post.userid}`
     return(
         <div>   
+            <div className="post">
+                <h3>{post.title}</h3>
+                <a id="userLink" href={userLink} >{post.username}</a>
+                <p>{post.body}</p>
+            </div> 
+            <div className="comments">
 
-
+            </div>
+            
             {cookieFound?<div>
                 <input type='text' placeholder='comment...' onChange={(e)=>setCommentInput(e.target.value)} />
                 <button onClick={()=>{submitComment()}} >comment</button>
             </div>:<div>login or regitser to comment</div>}
+
+            {renderUserPostedComment?<div>
+
+            </div>:
+            <div>Error occured while posting Comment</div> }
         </div>
     )
 }

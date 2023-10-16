@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react'
-import './styles.css'
 import { useNavigate} from 'react-router-dom'
 import {CheckCookie} from './Utils'
 import { ViewPostByID } from './Viewpost'
 //Cookies.set('name', 'value', { expires: 7, path: '' })
 
 //checks token sends post 
-
+let postid:number
 export default function CreatePost(){
     const[cookie,setCookie]=useState("")
     const[title,setTitle]=useState("")
@@ -17,7 +16,7 @@ export default function CreatePost(){
     const[render,setRender]=useState(false)
     const[enableButton,setenableButton]=useState(true)
     const[buttonRenderCount,setbuttonRenderCount]=useState(0)
-    const[postCreated,setPostCreated]=useState(false)
+//    const[postCreated,setPostCreated]=useState(false)
     const navigate=useNavigate()
     
     useEffect(()=>{
@@ -44,15 +43,19 @@ export default function CreatePost(){
         }
         const post={"post_title":title,"post_content":postbody}
         const res=await fetch("http://localhost:8000/createpost",{
-            method:'POST',
+            method:"POST",
             headers:headers,
             body:JSON.stringify(post)
         })
         setLoading(false)
         if(res.status===200){
-            //send to view post 
-            setPostCreated(true)
+            //send to view post
+            const parsedres=await res.json()
+            //TODO get the postid from res
+            postid=parsedres.postid 
+            //setPostCreated(true)
             setError(false)
+            window.location.replace(`http://localhost:3000/post/${postid}`) 
         }else{
             setError(true)
             setErrorMessage("error occured "+res)
@@ -86,7 +89,6 @@ export default function CreatePost(){
         {error?<div className="input-error-message">{errorMessage}</div>:<></>}
         {loading&&<div className="input-error-message">Loading</div>}
 
-        {postCreated?<ViewPostByID />:<>Error</>}
         </div>
     )
 }

@@ -1,6 +1,5 @@
 import {useState} from 'react'
 import React from 'react'
-import './styles.css'
 //TODO catch no entry empty values
 export default function LoginUser(){
     const[username,setUsername]=useState("")
