@@ -50,7 +50,7 @@ function App() {
         <Route path="/home" element={<Home/>} />
         <Route path="/401" element={<Unauthorised/>} />
         <Route path="/404" element={<NotFound/>} />
-        <Route path="/post/:id" element={<ViewPostByID/>} />
+        <Route path="/post" element={<ViewPostByID/>} />
       </Routes>
      </BrowserRouter> 
     </div>

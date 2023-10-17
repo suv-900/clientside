@@ -1,9 +1,5 @@
 
-export function CheckCookie():string{
+export function CheckCookie():string|null{
     const cookie:string|null=localStorage.getItem("token")
-        if(cookie!=null){
-            return cookie
-        }else{
-            return ""
-        } 
+    return cookie 
     }

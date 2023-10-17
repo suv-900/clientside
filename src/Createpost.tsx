@@ -21,7 +21,7 @@ export default function CreatePost(){
     
     useEffect(()=>{
         const cookieFound=CheckCookie()
-        if(cookieFound.length===0){
+        if(cookieFound===null){
             navigate("/401") 
             return
         }
@@ -38,7 +38,6 @@ export default function CreatePost(){
         setLoading(true)
         const headers ={
             'Authorization':`${cookie}`,
-
             'Content-Type':'application/json'
         }
         const post={"post_title":title,"post_content":postbody}
@@ -50,12 +49,12 @@ export default function CreatePost(){
         setLoading(false)
         if(res.status===200){
             //send to view post
-            const parsedres=await res.json()
-            //TODO get the postid from res
-            postid=parsedres.postid 
+            const r=await res.json()
+            postid=JSON.parse(r)
+            console.log(postid)
             //setPostCreated(true)
             setError(false)
-            window.location.replace(`http://localhost:3000/post/${postid}`) 
+            window.location.replace(`http://localhost:3000/post/?id=${postid}`) 
         }else{
             setError(true)
             setErrorMessage("error occured "+res)
