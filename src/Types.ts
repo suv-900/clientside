@@ -1,4 +1,5 @@
 export class Comments{
+        commentID:number|undefined
         userid:number|undefined
         username:string|undefined
         commentLikes:number|undefined
@@ -16,22 +17,24 @@ export class Comments{
 }
 
 export class PostObject{
-        title:string=""
+        title:string | undefined
         body:string | undefined
         post_likes: number |undefined
         comments:Comments[]|undefined
-        userid:number|undefined
+        authorid:number|undefined
         username:string|undefined
-        createdAt:number|undefined
+        createdat:number|undefined
+        updatedat:number|undefined
 
         PostObject(){
                 this.title=""
                 this.body=""
                 this.post_likes=0
                 this.comments=[]
-                this.userid=0
+                this.authorid=0
                 this.username=""
-                this.createdAt=0
+                this.createdat=0
+                this.updatedat=0
         }
 }
 

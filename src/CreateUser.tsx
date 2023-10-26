@@ -140,7 +140,11 @@ export default function CreateUser(){
             setLoading(false)
             if (res.status===200){
                 setUserCreated(true)
-                console.log("res "+res)
+                res.json().then(res=>{
+                    console.log(res)        
+                    localStorage.setItem("token",res)
+                    return
+                })
             }else{
 
             res.json().then(res=>{
@@ -151,12 +155,13 @@ export default function CreateUser(){
         })
     }
     
+    /*
     if(userCreated){
         console.log("sending to homepage")
         navigate("/home")
         return
     }
-    
+    */ 
     
     function enableButton(){
         if(isValidEmail&&isValidUsername&&isValidPassword){

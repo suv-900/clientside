@@ -1,3 +1,4 @@
+/*
 body {
     font-family: Arial, sans-serif;
     margin: 0;
@@ -58,3 +59,39 @@ textarea {
     margin-bottom: 10px;
     border: 1px solid #ccc;
 }
+*/
+/* Comment Box Container */
+.comment-box {
+    border: 1px solid #ddd;
+    padding: 10px;
+    margin: 10px;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+  }
+  
+  /* Username Link */
+  .comment-username {
+    font-weight: bold;
+    color: #0074D9; /* You can choose your desired color */
+    text-decoration: none;
+  }
+  
+  .comment-username:hover {
+    text-decoration: underline;
+  }
+  
+  /* Comment Content Paragraph */
+  .comment-content {
+    margin: 5px 0;
+  }
+  
+  /* Comment Button */
+  .comment-button {
+    border: none;
+    padding: 5px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  
+ 
+  

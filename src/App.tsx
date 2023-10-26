@@ -8,6 +8,7 @@ import {NotFound,Unauthorised} from './ErrCode/ErrorCodes'
 import { Home } from './Home'
 import { ViewPostByID } from './Viewpost'
 import { Profile } from './UserProfile'
+import { ReportContent } from './ReportContent'
 //TODO server polling
 
 function App() {
@@ -47,8 +48,9 @@ function App() {
         <Route path="/register" element={<CreateUser/>} />
         <Route path="/createpost" element={<CreatePost/>} />
         <Route path="/profile" element={<Profile/>} />
-        <Route path="/home" element={<Home/>} />
+        <Route path="/" element={<Home/>} />
         <Route path="/401" element={<Unauthorised/>} />
+        <Route path="/report-content" element={<ReportContent/>} />
         <Route path="/404" element={<NotFound/>} />
         <Route path="/post" element={<ViewPostByID/>} />
       </Routes>
