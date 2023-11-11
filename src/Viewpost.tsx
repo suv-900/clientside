@@ -13,7 +13,6 @@ export function ViewPostByID(){
     const[loading,setLoading]=useState(false)
     const[errorMessage,setErrorMessage]=useState("")
     const[cookieFound,setCookieFound]=useState(false)
-    const[token,setToken]=useState("")
     const[commentInput,setCommentInput]=useState("")
     const[renderUserPostedComment,setRenderUserPostedComment]=useState(false)
     const[renderPost,setRenderPost]=useState(false)  
@@ -35,20 +34,20 @@ export function ViewPostByID(){
             return
         }
         */ 
-    
+    let cookieFoundY=false
+    let token:string
+
     useEffect(()=>{
         let queryParams=new URLSearchParams(window.location.search)
         const postid=queryParams.get("id")
         if(postid!==null){
             postID=parseInt(postid)
-            const token=CheckCookie()
-            if(token!==null){
-                setToken(token)
-                setCookieFound(true)
-                console.log("token found")
+            const tokenFound=CheckCookie()
+            if(tokenFound!==null){
+                token=tokenFound
+                cookieFoundY=true
             }    
             getPostContents()
-    //        setGoFetchCount(1)
         }else{
             console.log("postid is null")
         }
@@ -61,10 +60,11 @@ export function ViewPostByID(){
 
     async function getPostContents(){
         setLoading(true)
-        console.log(postID)
         if(postID===undefined) return
         let res
-        if(cookieFound){
+        console.log(cookieFoundY)
+        console.log(token)
+        if(cookieFoundY){
             const headers={
                 "Authorization":`${token}`
             }
@@ -86,15 +86,16 @@ export function ViewPostByID(){
 
         const r=await res.json()
         console.log(r)
-        post.title=r.Post.Post_title
-        post.authorid=r.Post.Author_id
-        post.body=r.Post.Post_content
-        post.createdat=r.Post.CreatedAt
-        post.post_likes=r.Post.Post_likes
-        post.updatedat=r.Post.UpdatedAt
-        post.postLikedByUser=r.PostLikedByUser
-        post.postDislikedByUser=r.PostDislikedByUser
-        post.username=r.Username
+        let k=r.PostAndUserPreferences
+        post.title=k.Post_title
+        post.authorid=k.Author_id
+        post.body=k.Post_content
+        post.createdat=k.CreatedAt
+        post.post_likes=k.Post_likes
+        post.updatedat=k.UpdatedAt
+        post.postLikedByUser=k.PostLikedByUser
+        post.postDislikedByUser=k.PostDislikedByUser
+        post.username=k.Username
         post.comments=[] 
         commentCount=r.Comments.length
         userLink=`http://localhost:3000/user/${post.authorid}`
@@ -116,6 +117,8 @@ export function ViewPostByID(){
     }
 
     async function LikePost(){
+        if(post.postDislikedByUser) return
+
         if(!cookieFound){
             window.location.replace("http://localhost:3000/login")
             return
@@ -133,8 +136,7 @@ export function ViewPostByID(){
             })
         if(res.status===201||res.status===200){
             setPostLikes(postLikes+1)
-            setPostLikedByUserRender(true)
-            setPostDisLikedByUserRender(false)
+            setPostLiked(true)
         }
         if(res.status===208){
             setPostLikedByUserRender(true)
@@ -153,10 +155,9 @@ export function ViewPostByID(){
                     headers:headers
                 }
             )
-            if(res.status===201){
+            if(res.status===201||res.status===200){
             setPostLikes(postLikes-1)
-            setPostLikedByUserRender(true)
-            setPostDisLikedByUserRender(false)
+            setPostLiked(false)
             }
             if(res.status===208){
             setPostLikedByUserRender(true)
@@ -172,6 +173,8 @@ export function ViewPostByID(){
         }
     }
     async function DislikePost(){
+        if(post.postLikedByUser) return
+        
         if(!cookieFound){
             window.location.replace("http://localhost:3000/login")
             return
@@ -188,6 +191,7 @@ export function ViewPostByID(){
             })
             if(res.status===201||res.status===200){
                 setPostLikes(postLikes-1)
+                setPostDisliked(true)
             }
             if(res.status===208){
                 console.log("continue")
@@ -201,11 +205,12 @@ export function ViewPostByID(){
             const headers={
                 "Authorization":`${token}`
             }
-            const res=await fetch(`http://localhost:8000/removedislikepost/${postID}`,{
-                method:"DELETE",
+            const res=await fetch(`http://localhost:8000/removedislikefrompost/${postID}`,{
+                method:"POST",
                 headers:headers
             })
             if(res.status===200){
+                setPostLikes(postLikes+1)
                 setPostDisliked(false)
             }
             if(res.status===500){
@@ -279,7 +284,6 @@ export function ViewPostByID(){
                         className="upvote" 
                         onClick={()=>{
                             post.postLikedByUser=!post.postLikedByUser
-                            setPostLiked(post.postLikedByUser)
                             LikePost()}}
                         style={upvoteStyles}>
                         ▲
@@ -289,7 +293,6 @@ export function ViewPostByID(){
                         style={downvoteStyles}
                         onClick={()=>{
                             post.postDislikedByUser=!post.postDislikedByUser
-                            setPostDisliked(post.postDislikedByUser)
                             DislikePost()
                             }
                             }>
