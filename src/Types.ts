@@ -1,40 +1,50 @@
 export class Comments{
-        commentID:number|undefined
-        userid:number|undefined
-        username:string|undefined
-        commentLikes:number|undefined
-        commentBody:string|undefined
-        createdAt:number|undefined
-        
-        Comments(){
+        commentID:number
+        userid:number
+        username:string
+        userliked:boolean
+        commentLikes:number
+        commentBody:string
+        createdAt:number
+
+        constructor(){
+                this.userliked=false
+                this.commentID=0
                 this.userid=0
                 this.username=""
                 this.commentLikes=0
                 this.commentBody=""
                 this.createdAt=0
         }
-        
+
+       
 }
 
 export class PostObject{
-        title:string | undefined
-        body:string | undefined
-        post_likes: number |undefined
-        comments:Comments[]|undefined
-        authorid:number|undefined
-        username:string|undefined
-        createdat:number|undefined
-        updatedat:number|undefined
+        title:string 
+        body:string 
+        post_likes: number 
+        comments:Comments[]
+        authorid:number
+        username:string
+        postLikedByUser:boolean
+        postDislikedByUser:boolean
+        createdat:number
+        updatedat:number
 
-        PostObject(){
+        constructor(){
                 this.title=""
                 this.body=""
                 this.post_likes=0
                 this.comments=[]
                 this.authorid=0
                 this.username=""
+                this.postLikedByUser=false
+                this.postDislikedByUser=false
                 this.createdat=0
                 this.updatedat=0
         }
+        
+       
 }
 

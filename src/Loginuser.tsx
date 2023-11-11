@@ -19,31 +19,27 @@ export default function LoginUser(){
             setErrorMessage("")
             setLoading(true)
             const user={username,password}
-            fetch("http://localhost:8000/login",{
+            const res=await fetch("http://localhost:8000/login",{
                 method:"POST",
                 body:JSON.stringify(user)
-            }).then(res=>{
-                    if (res.status===404){
-                        setLoading(false)
-                        setErrorMessage("Invalid Username.")  
-                        return  
-                    }
-                    if (res.status===401){
-                        setLoading(false)
-                        setErrorMessage("Invalid Password")
-                        return
-                    }
-                    if (res.status===200){
-                        setLoading(false)
-                        res.json().then(res=>{
-                            localStorage.setItem("token",res)
-                            return
-                        })
-                        
-                        //console.log(document.cookie.split(";").find(cookie=>cookie.trim().startsWith("userToken")))
-                        //console.log(document.cookie)
-                    }
-            })
+            }) 
+            setLoading(false) 
+            if(res.status===404){
+                setErrorMessage("Invalid Username.")  
+            }
+            if(res.status===401){
+                setErrorMessage("Invalid Password")
+            }
+            if (res.status===200){
+                const r=await res.json()
+                localStorage.setItem("token",r)      
+                //console.log(document.cookie.split(";").find(cookie=>cookie.trim().startsWith("userToken")))
+                //console.log(document.cookie)
+            }
+            if(res.status===500){
+                return
+                window.location.replace("http://localhost:3000/serverError")
+            }
                 
     }
 

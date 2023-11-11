@@ -41,7 +41,7 @@ export function CommentBuilder(props:{comment:Comments,token:string,renderReport
 
     async function dislikeComment(){
         if(disliked) return
-        
+        return 
         setDisliked(true)
         setLiked(false)
         setErrorMessage("")
@@ -68,12 +68,20 @@ export function CommentBuilder(props:{comment:Comments,token:string,renderReport
                 <a href={userlink} className="comment-username">{username}</a>
                 <p className="comment-content">{commentBody}</p>
                                 
-                <button  onClick={()=>{likeComment()}}> Like</button>
+                {likes} likes
+                <button  
+                className="upvote"
+                onClick={()=>{likeComment()}}>▲</button>
                                 
-                <button onClick={()=>{dislikeComment()}}>Dislike</button>
-                {likes}
+                <button
+                className="downvote" 
+                onClick={()=>{dislikeComment()}}>▲
+                </button>
 
-                {renderReport&&<button onClick={()=>{window.location.replace(`http://localhost:3000/report-content/?elementID=${commentID}c`)}}>report</button>} 
+                {renderReport&&
+                <button
+                className="report-button" 
+                onClick={()=>{window.location.replace(`http://localhost:3000/report-content/?elementID=${commentID}c`)}}>report</button>} 
                 </div>
             </div>
         )

@@ -5,10 +5,9 @@ import { Comments, PostObject } from './Types'
 import { useSearchParams } from 'react-router-dom'
 import './styles.css'
 import { CommentBuilder } from './CommentBuilder'
-    //TODO fetch postid from the url
 
 let post=new PostObject()
-let newUserComment=new Comments()
+//let newUserComment=new Comments()
 let postID:number
 export function ViewPostByID(){
     const[loading,setLoading]=useState(false)
@@ -17,12 +16,15 @@ export function ViewPostByID(){
     const[token,setToken]=useState("")
     const[commentInput,setCommentInput]=useState("")
     const[renderUserPostedComment,setRenderUserPostedComment]=useState(false)
-    const[goFetch,setGoFetch]=useState(false)    
     const[renderPost,setRenderPost]=useState(false)  
     const[commentLikeCount,setCommentLikeCount]=useState(0)
     const[postLiked,setPostLiked]=useState(false)
-    const[postdisliked,setPostDisliked]=useState(false)
-    const[postLikes,setPostLikes]=useState(0)
+    const[postDisliked,setPostDisliked]=useState(false)
+    const[postLikes,setPostLikes]=useState(post.post_likes)
+    const[postLikedByUserRender,setPostLikedByUserRender]=useState(false)
+    const[postDisLikedByUserRender,setPostDisLikedByUserRender]=useState(false)
+    const[postLikeButtonContent,setPostLikeButtonContent]=useState("Like")
+    const[pressedPostDownVoteButton,setPressedPostDownVoteButton]=useState(false)
 //    const[postObject,setPostObject]=useState(null) 
      /*
     let {id}=useParams()
@@ -43,46 +45,57 @@ export function ViewPostByID(){
             if(token!==null){
                 setToken(token)
                 setCookieFound(true)
-            }else{
-                console.log("token not found")
-            }
-            setGoFetch(true)
+                console.log("token found")
+            }    
+            getPostContents()
+    //        setGoFetchCount(1)
         }else{
             console.log("postid is null")
         }
     },[])
 
-   // useEffect(()=>{setPostLikes(post.post_likes)},[post.post_likes])
-
-    useEffect(()=>{
-        getPostContents()
-    },[goFetch]) 
-        /*
-    useEffect(()=>{
-       const cookie=CheckCookie()
-        if(cookie.length!=0){
-            setCookieFound(true)
-            setToken(cookie)
-            //TODO user can comment
-        }
-        getPostContents()
-    },[])
-    */
+   
     let commentCount:number=0
-    let userLink:string="" 
+    let userLink:string=""
+    
+
     async function getPostContents(){
         setLoading(true)
+        console.log(postID)
         if(postID===undefined) return
-        const res=await fetch(`http://localhost:8000/viewpost/${postID}`,{
+        let res
+        if(cookieFound){
+            const headers={
+                "Authorization":`${token}`
+            }
+            res=await fetch(`http://localhost:8000/viewpostToken/${postID}`,{
+            method:"GET",
+            headers:headers
+            })  
+        }else{
+            res=await fetch(`http://localhost:8000/viewpost/${postID}`,{
             method:"GET"
-        })   
+            })   
+        }
+        console.log(res.status)
+        return
+        if(res.status===401){
+            window.location.replace("http://localhost:3000/login")
+        }
+        if(res.status===400){
+            window.location.replace("http://localhost:3000/login")
+        }
         const r=await res.json()
+        console.log(r)
         post.title=r.Post.Post_title
         post.authorid=r.Post.Author_id
         post.body=r.Post.Post_content
         post.createdat=r.Post.CreatedAt
         post.post_likes=r.Post.Post_likes
         post.updatedat=r.Post.UpdatedAt
+        post.postLikedByUser=r.PostLikedByUser
+        post.postDislikedByUser=r.PostDislikedByUser
+        post.username=r.Username
         post.comments=[] 
         commentCount=r.Comments.length
         userLink=`http://localhost:3000/user/${post.authorid}`
@@ -95,8 +108,10 @@ export function ViewPostByID(){
             comment.commentID=r.Comments[i].CommentID
             post.comments.push(comment)
         }
-        setPostLikes(post.post_likes!)
         setLoading(false)
+        setPostLikes(post.post_likes)
+        setPostLiked(post.postLikedByUser)
+        setPostDisliked(post.postDislikedByUser)
         setRenderPost(true)
     }
 
@@ -109,6 +124,7 @@ export function ViewPostByID(){
 
         setPostLiked(true)
         setPostDisliked(false)
+        return
         const headers={
             "Authorization":`${token}`
         }
@@ -116,19 +132,28 @@ export function ViewPostByID(){
             method:"POST",
             headers:headers
         })
-        if(res.status===200){
+        if(res.status===201){
             setPostLikes(postLikes+1)
+            setPostLikedByUserRender(true)
+            setPostDisLikedByUserRender(false)
+            return
+        }
+        if(res.status===208){
+            setPostLikedByUserRender(true)
+            setPostDisLikedByUserRender(false)
+            return
         }else{
             console.log("error while liking post")
         }
     }
     async function dislikePostMain(){
-        if(postdisliked) return
         if(!cookieFound){
             window.location.replace("http://localhost:3000/login")
             return
         }
-        setPostDisliked(true)
+        console.log("before function "+postDisliked)
+        return
+        if(postDisliked){
         setPostLiked(false)
         const headers={
             "Authorization":`${token}`
@@ -137,13 +162,45 @@ export function ViewPostByID(){
             method:"POST",
             headers:headers
         })
-        if(res.status===200){
+        if(res.status===201){
             setPostLikes(postLikes-1)
+        }
+        if(res.status===208){
+            console.log("continue")
+        }
+        if(res.status===400||res.status===401){
+            window.location.replace("http://localhost:3000/login")
         }else{
             console.log("error while liking post")
         }
-    }
+        }else{
+            console.log("yes")
+            const headers={
+                "Authorization":`${token}`
+            }
+            const res=await fetch(`http://localhost:8000/removedislikepost/${postID}`,{
+                method:"DELETE",
+                headers:headers
+            })
+            if(res.status===200){
+                setPostDisliked(false)
+            }
+            if(res.status===500){
+                console.log("Error")
+            }
+            if(res.status===400||res.status===401){
+                window.location.replace("http://localhost:3000/login")
+                return
+            }else{
+                console.log("error while liking post")
+            }
+        }
 
+        
+    }
+    useEffect(()=>{
+       dislikePostMain() 
+    },[pressedPostDownVoteButton])
 
     async function submitComment(){ 
         if(token.length===0){
@@ -177,27 +234,45 @@ export function ViewPostByID(){
         }
     }
 
-
+    let upvoteStyles={
+        color:postLiked?"red":"lightslategrey"
+    } 
+    let downvoteStyles={
+        color:postDisliked?"blue":"lightslategrey"
+    }
     return(
         <div>
             {!renderPost?<></>: 
                 <div>
-                    <div>
+                    <div className="post-box">
                         <h3>{post.title}</h3>
-                        <a id="userLink" href={userLink} >{post.username}</a>
-                        <p>{post.body}</p>
+                        <a  className="post-username" id="userLink" href={userLink} >{post.username}</a>
+                        <p className="post-content">{post.body}</p>
                         <p>{postLikes} likes</p>
-                        <button onClick={()=>{likePostMain()} }>Like</button>
-                        <button onClick={()=>{dislikePostMain()} }>Dislike</button>
+                        <button
+                        className="upvote" 
+                        onClick={()=>{likePostMain()}}
+                        style={upvoteStyles}>
+                        ▲
+                        </button>
+                        <button
+                        className="downvote"
+                        style={downvoteStyles}
+                        onClick={()=>{
+                            setPostDisliked(!postDisliked)
+                            setPressedPostDownVoteButton(!pressedPostDownVoteButton)} }>
+                        ▲
+                        </button>
                     </div> 
                     <div className="comments">
                         {post.comments!==undefined?post.comments.map(comment=><CommentBuilder renderReport={cookieFound} comment={comment} key={comment.commentID} token={token} />):<>{console.log("post comments undeinfed")}</>}
 
                     </div>
                     
-                    {cookieFound?<div>
-                        <input type='text' placeholder='comment...' onChange={(e)=>setCommentInput(e.target.value)} />
-                        <button onClick={()=>{submitComment()}} >comment</button>
+                    {cookieFound?
+                    <div  className="comment-form">
+                        <input className="comment-input" type='text' placeholder='comment...' onChange={(e)=>setCommentInput(e.target.value)} />
+                        <button className="comment-button"onClick={()=>{submitComment()}} >comment</button>
                     </div>:<div>login or regitser to comment
                         <button onClick={()=>{window.location.replace("http://localhost:3000/login")}} >Login</button>
                         <button onClick={()=>{window.location.replace("http://localhost:3000/register")}} >Register</button>
@@ -207,12 +282,9 @@ export function ViewPostByID(){
                         
 
                     </div>:
-                    <>{console.log("error occured while posting comment")}</> }
+                    <></> }
                 </div>
             }
         </div>
     )
 }    
-
-
-
