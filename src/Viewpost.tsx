@@ -77,14 +77,13 @@ export function ViewPostByID(){
             method:"GET"
             })   
         }
-        console.log(res.status)
-        return
         if(res.status===401){
             window.location.replace("http://localhost:3000/login")
         }
         if(res.status===400){
             window.location.replace("http://localhost:3000/login")
         }
+
         const r=await res.json()
         console.log(r)
         post.title=r.Post.Post_title
@@ -108,6 +107,7 @@ export function ViewPostByID(){
             comment.commentID=r.Comments[i].CommentID
             post.comments.push(comment)
         }
+
         setLoading(false)
         setPostLikes(post.post_likes)
         setPostLiked(post.postLikedByUser)
@@ -115,66 +115,89 @@ export function ViewPostByID(){
         setRenderPost(true)
     }
 
-    async function likePostMain(){
-        if(postLiked) return
+    async function LikePost(){
         if(!cookieFound){
             window.location.replace("http://localhost:3000/login")
             return
         }
-
-        setPostLiked(true)
-        setPostDisliked(false)
-        return
+        
         const headers={
             "Authorization":`${token}`
         }
-        const res=await fetch(`http://localhost:8000/likepost/${postID}`,{
-            method:"POST",
-            headers:headers
-        })
-        if(res.status===201){
+        if(post.postLikedByUser){
+            setPostLiked(true)
+            setPostDisliked(false)
+            const res=await fetch(`http://localhost:8000/likepost/${postID}`,{
+                method:"POST",
+                headers:headers
+            })
+        if(res.status===201||res.status===200){
             setPostLikes(postLikes+1)
             setPostLikedByUserRender(true)
             setPostDisLikedByUserRender(false)
-            return
         }
         if(res.status===208){
             setPostLikedByUserRender(true)
             setPostDisLikedByUserRender(false)
-            return
-        }else{
+        }
+        if(res.status===400||res.status===401){
+                window.location.replace("http://localhost:3000/login")
+        }
+        else{
             console.log("error while liking post")
         }
+        }else{
+            const res=await fetch(`http://localhost:8000/removelikefrompost/${postID}`,
+                {
+                    method:"POST",
+                    headers:headers
+                }
+            )
+            if(res.status===201){
+            setPostLikes(postLikes-1)
+            setPostLikedByUserRender(true)
+            setPostDisLikedByUserRender(false)
+            }
+            if(res.status===208){
+            setPostLikedByUserRender(true)
+            setPostDisLikedByUserRender(false)
+        }
+         if(res.status===400||res.status===401){
+                window.location.replace("http://localhost:3000/login")
+        }
+        else{
+            console.log("error while liking post")
+        }
+
+        }
     }
-    async function dislikePostMain(){
+    async function DislikePost(){
         if(!cookieFound){
             window.location.replace("http://localhost:3000/login")
             return
         }
-        console.log("before function "+postDisliked)
-        return
-        if(postDisliked){
-        setPostLiked(false)
-        const headers={
-            "Authorization":`${token}`
-        }
-        const res=await fetch(`http://localhost:8000/dislikepost/${postID}`,{
-            method:"POST",
-            headers:headers
-        })
-        if(res.status===201){
-            setPostLikes(postLikes-1)
-        }
-        if(res.status===208){
-            console.log("continue")
-        }
-        if(res.status===400||res.status===401){
-            window.location.replace("http://localhost:3000/login")
+        
+        if(post.postDislikedByUser){
+            setPostLiked(false)
+            const headers={
+                 "Authorization":`${token}`
+            }
+            const res=await fetch(`http://localhost:8000/dislikepost/${postID}`,{
+                method:"POST",
+                headers:headers
+            })
+            if(res.status===201||res.status===200){
+                setPostLikes(postLikes-1)
+            }
+            if(res.status===208){
+                console.log("continue")
+            }
+            if(res.status===400||res.status===401){
+                window.location.replace("http://localhost:3000/login")
+            }else{
+                console.log("error while liking post")
+            }
         }else{
-            console.log("error while liking post")
-        }
-        }else{
-            console.log("yes")
             const headers={
                 "Authorization":`${token}`
             }
@@ -198,10 +221,13 @@ export function ViewPostByID(){
 
         
     }
+    /*
     useEffect(()=>{
-       dislikePostMain() 
+        if(pressedPostDownVoteButton){
+            dislikePostMain() 
+        }
     },[pressedPostDownVoteButton])
-
+    */
     async function submitComment(){ 
         if(token.length===0){
             setErrorMessage("token is invalid")
@@ -251,7 +277,10 @@ export function ViewPostByID(){
                         <p>{postLikes} likes</p>
                         <button
                         className="upvote" 
-                        onClick={()=>{likePostMain()}}
+                        onClick={()=>{
+                            post.postLikedByUser=!post.postLikedByUser
+                            setPostLiked(post.postLikedByUser)
+                            LikePost()}}
                         style={upvoteStyles}>
                         ▲
                         </button>
@@ -259,8 +288,11 @@ export function ViewPostByID(){
                         className="downvote"
                         style={downvoteStyles}
                         onClick={()=>{
-                            setPostDisliked(!postDisliked)
-                            setPressedPostDownVoteButton(!pressedPostDownVoteButton)} }>
+                            post.postDislikedByUser=!post.postDislikedByUser
+                            setPostDisliked(post.postDislikedByUser)
+                            DislikePost()
+                            }
+                            }>
                         ▲
                         </button>
                     </div> 
