@@ -9,14 +9,14 @@ import { CommentBuilder } from './CommentBuilder'
 let post=new PostObject()
 //let newUserComment=new Comments()
 let postID:number
+let token:string
+let tokenFound=false
 export function ViewPostByID(){
     const[loading,setLoading]=useState(false)
-    const[errorMessage,setErrorMessage]=useState("")
     const[cookieFound,setCookieFound]=useState(false)
     const[commentInput,setCommentInput]=useState("")
     const[renderUserPostedComment,setRenderUserPostedComment]=useState(false)
     const[renderPost,setRenderPost]=useState(false)  
-    const[commentLikeCount,setCommentLikeCount]=useState(0)
     const[postLiked,setPostLiked]=useState(false)
     const[postDisliked,setPostDisliked]=useState(false)
     const[postLikes,setPostLikes]=useState(post.post_likes)
@@ -34,19 +34,19 @@ export function ViewPostByID(){
             return
         }
         */ 
-    let cookieFoundY=false
-    let token:string
 
     useEffect(()=>{
         let queryParams=new URLSearchParams(window.location.search)
         const postid=queryParams.get("id")
         if(postid!==null){
             postID=parseInt(postid)
-            const tokenFound=CheckCookie()
-            if(tokenFound!==null){
-                token=tokenFound
-                cookieFoundY=true
-            }    
+            const t=CheckCookie()
+            if(t!=null){
+                tokenFound=true
+                token=t 
+            }else{
+                tokenFound=false
+            } 
             getPostContents()
         }else{
             console.log("postid is null")
@@ -61,10 +61,9 @@ export function ViewPostByID(){
     async function getPostContents(){
         setLoading(true)
         if(postID===undefined) return
+        
         let res
-        console.log(cookieFoundY)
-        console.log(token)
-        if(cookieFoundY){
+        if(tokenFound){
             const headers={
                 "Authorization":`${token}`
             }
@@ -77,25 +76,24 @@ export function ViewPostByID(){
             method:"GET"
             })   
         }
-        if(res.status===401){
+        if(res.status===400||res.status===401){
             window.location.replace("http://localhost:3000/login")
-        }
-        if(res.status===400){
-            window.location.replace("http://localhost:3000/login")
-        }
+            return
+        } 
 
         const r=await res.json()
-        console.log(r)
-        let k=r.PostAndUserPreferences
+        let k=r.Post
         post.title=k.Post_title
         post.authorid=k.Author_id
         post.body=k.Post_content
         post.createdat=k.CreatedAt
         post.post_likes=k.Post_likes
         post.updatedat=k.UpdatedAt
-        post.postLikedByUser=k.PostLikedByUser
-        post.postDislikedByUser=k.PostDislikedByUser
-        post.username=k.Username
+        post.postLikedByUser=r.PostLikedByUser
+        console.log(r.PostLikedByUser)
+        console.log(r.PostDislikedByUser)
+        post.postDislikedByUser=r.PostDislikedByUser
+        post.username=r.Username
         post.comments=[] 
         commentCount=r.Comments.length
         userLink=`http://localhost:3000/user/${post.authorid}`
@@ -117,13 +115,12 @@ export function ViewPostByID(){
     }
 
     async function LikePost(){
-        if(post.postDislikedByUser) return
-
-        if(!cookieFound){
+        if(!tokenFound){
             window.location.replace("http://localhost:3000/login")
             return
         }
         
+        setPostDisliked(false)
         const headers={
             "Authorization":`${token}`
         }
@@ -173,13 +170,13 @@ export function ViewPostByID(){
         }
     }
     async function DislikePost(){
-        if(post.postLikedByUser) return
-        
-        if(!cookieFound){
+        if(!tokenFound){
             window.location.replace("http://localhost:3000/login")
             return
         }
-        
+       
+        setPostLiked(false)
+
         if(post.postDislikedByUser){
             setPostLiked(false)
             const headers={
@@ -233,10 +230,11 @@ export function ViewPostByID(){
         }
     },[pressedPostDownVoteButton])
     */
-    async function submitComment(){ 
+    async function submitComment(){
+        console.log(token)
+        if(token===undefined) return 
         if(token.length===0){
-            setErrorMessage("token is invalid")
-
+            console.log("token invalid")
             return
         }
         setLoading(true) 
@@ -257,11 +255,9 @@ export function ViewPostByID(){
             console.log("done")
 
             window.location.replace(`http://localhost:3000/post/?id=${postID}`)
-            setRenderUserPostedComment(true)
            //add the new comment on top of all comments 
         }else{
             setRenderUserPostedComment(false)
-            setErrorMessage("Server Error")
         }
     }
 
@@ -304,7 +300,7 @@ export function ViewPostByID(){
 
                     </div>
                     
-                    {cookieFound?
+                    {tokenFound?
                     <div  className="comment-form">
                         <input className="comment-input" type='text' placeholder='comment...' onChange={(e)=>setCommentInput(e.target.value)} />
                         <button className="comment-button"onClick={()=>{submitComment()}} >comment</button>
